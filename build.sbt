@@ -14,6 +14,7 @@ libraryDependencies ++= {
   val circeV = "0.7.0"
   Seq(
     "com.typesafe.akka" %% "akka-http" % akkaHttpV,
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test",
     "io.circe" %% "circe-core" % circeV,
     "io.circe" %% "circe-generic" % circeV,
     "io.circe" %% "circe-parser" % circeV,
