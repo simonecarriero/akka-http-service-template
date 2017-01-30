@@ -1,0 +1,72 @@
+#!/bin/bash
+
+ARGS=""
+START_SCRIPT='java -jar target/scala-2.12/akka-http-service-template-assembly-1.0.jar'
+PID_FILE='.pid'
+
+# ******************************************************************************
+
+pid_file_exists() { return $([ -f $PID_FILE ]); }
+is_null() { return $([ -z $1 ]); }
+is_running() { return $( !(is_null $(ps axf | grep -w $1 | grep -v grep) )); }
+pid() { echo $(cat $PID_FILE); }
+
+case "$1" in
+start)
+    if pid_file_exists && is_running $(pid); then
+        echo "Already running [$(pid)]"
+        exit 0
+    else
+        PID=$($START_SCRIPT $ARGS > /dev/null 2>&1 & echo $!)
+        if is_null $PID; then
+            echo "Failed starting"
+            exit 3
+        else
+            echo $PID > $PID_FILE
+            echo "Started [$PID]"
+            exit 0
+        fi
+    fi
+;;
+
+status)
+    if pid_file_exists; then
+        if is_running $(pid); then
+            echo "Running [$(pid)]"
+            exit 0
+        else
+            echo "Not running (process dead but pidfile exists)"
+            exit 1
+        fi
+    else
+        echo "Not Running"
+        exit 3
+    fi
+;;
+
+stop)
+    if pid_file_exists; then
+        if is_running $(pid); then
+            kill -HUP $(pid)
+            echo "Stopped [$(pid)]"
+            rm -f $PID_FILE
+            exit 0
+        else
+            echo "Not running (process dead but pidfile exists)"
+            exit 1
+        fi
+    else
+        echo "Not Running (pid file not found)"
+        exit 3
+    fi
+;;
+
+restart)
+    $0 stop
+    $0 start
+;;
+
+*)
+    echo "Usage: $0 {status|start|stop|restart}"
+    exit 4
+esac
